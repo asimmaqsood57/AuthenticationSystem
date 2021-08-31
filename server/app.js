@@ -90,6 +90,7 @@ app.post("/login", async (req, res) => {
         { id: user._id, role: "captain" },
         "YOUR_SECRET_KEY"
       );
+
       return res
         .cookie("access_token", token, {
           httpOnly: true,
