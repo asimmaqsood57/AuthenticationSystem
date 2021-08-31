@@ -10,12 +10,8 @@ const app = express();
 const userMod = require("./modles/users");
 app.use(express.json());
 
-app.use(cors());
+app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 app.use(cookieparser());
-
-app.get("/", (req, res) => {
-  res.send("welcome to homepage");
-});
 
 mongoose
   .connect(
@@ -32,6 +28,15 @@ mongoose
     console.log("Something went wrong", err);
   });
 
+app.get("/", (req, res) => {
+  return res
+    .cookie("access_token", "jwt", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+    })
+    .status(200)
+    .json({ message: "Logged in successfully 😊 👌" });
+});
 const authorization = (req, res, next) => {
   const token = req.cookies.access_token;
   if (!token) {
@@ -67,6 +72,7 @@ app.post("/register", async (req, res) => {
 });
 
 app.get("/protected", authorization, (req, res) => {
+  console.log("protected");
   return res.json({ user: { id: req.userId, role: req.userRole } });
 });
 
@@ -81,26 +87,36 @@ app.post("/login", async (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
 
+  console.log("password user entered current", password);
+  console.log("email user entered current", email);
+  // return res
+  //   .cookie("access_token", "jwt", {
+  //     httpOnly: true,
+  //     secure: process.env.NODE_ENV === "production",
+  //   })
+  //   .status(200)
+  //   .json({ message: "Logged in successfully 😊 👌" });
+
   const user = await userMod.findOne({ email: email });
 
   console.log(user);
-  try {
-    if (password == user.password) {
-      const token = jwt.sign(
-        { id: user._id, role: "captain" },
-        "YOUR_SECRET_KEY"
-      );
 
-      return res
-        .cookie("access_token", token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-        })
-        .status(200)
-        .json({ message: "Logged in successfully 😊 👌" });
-    }
-  } catch (error) {
-    console.log(error);
+  console.log("database stored password", user.password);
+
+  if (password == user.password) {
+    console.log("you  are underarrest");
+    const token = jwt.sign(
+      { id: user._id, role: "captain" },
+      "YOUR_SECRET_KEY"
+    );
+
+    return res
+      .cookie("access_token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+      })
+      .status(200)
+      .json({ message: "Logged in successfully 😊 👌" });
   }
 });
 
