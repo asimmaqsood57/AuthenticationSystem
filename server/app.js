@@ -76,7 +76,13 @@ app.get("/protected", authorization, (req, res) => {
   return res.json({ user: { id: req.userId, role: req.userRole } });
 });
 
+app.get("/dashboard", authorization, (req, res) => {
+  console.log("dashboard");
+  return res.json({ user: { id: req.userId, role: req.userRole } });
+});
+
 app.get("/logout", authorization, (req, res) => {
+  console.log("logout");
   return res
     .clearCookie("access_token")
     .status(200)
